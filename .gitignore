@@ -9,4 +9,5 @@ __agent__/
 .npm/
 .matplotlib/
 .ssh/
+.config/
 .cache/
