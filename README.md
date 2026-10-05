@@ -2,6 +2,8 @@
 
 An educational simulation for a maths project: gradient descent on a strongly convex quadratic whose Hessian changes over time.
 
+**Live interactive website:** <https://mriibyte.github.io/drift-aware-eigen-scaling-lab/>
+
 The project has two interfaces:
 
 - `drift_aware_eigen_scaling.py` — a Python/Matplotlib dashboard with static plots.
