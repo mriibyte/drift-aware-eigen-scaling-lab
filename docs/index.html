@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Interactive simulation of drift-aware eigen scaling for gradient descent.">
+  <title>Drift-aware eigen scaling lab</title>
+  <style>
+    :root {
+      --ink: #102b46;
+      --muted: #607389;
+      --paper: #f5f8fb;
+      --card: #ffffff;
+      --line: #d8e3ec;
+      --teal: #00a6a6;
+      --teal-dark: #087d83;
+      --orange: #ed8354;
+      --slate: #78879a;
+      --purple: #8b61b8;
+      --shadow: 0 18px 45px rgba(26, 57, 83, 0.09);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 0%, rgba(0, 166, 166, .10), transparent 28rem),
+        linear-gradient(180deg, #edf6f9 0, var(--paper) 22rem, var(--paper) 100%);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .hero { max-width: 1180px; padding: 58px 28px 32px; margin: auto; }
+    .eyebrow { color: var(--teal-dark); font-weight: 800; letter-spacing: .15em; font-size: .72rem; }
+    h1 { max-width: 800px; margin: 13px 0 12px; font-size: clamp(2.35rem, 6vw, 5.2rem); line-height: .98; letter-spacing: -.065em; }
+    .hero p { max-width: 760px; color: var(--muted); font-size: 1.08rem; line-height: 1.65; margin: 0; }
+    .shell { max-width: 1180px; margin: auto; padding: 0 28px 70px; }
+    .card { background: rgba(255,255,255,.88); border: 1px solid rgba(216,227,236,.95); border-radius: 22px; box-shadow: var(--shadow); }
+    .controls { padding: 23px; }
+    .controls-head { display: flex; gap: 18px; justify-content: space-between; align-items: start; margin-bottom: 21px; }
+    .controls h2, .card h2 { margin: 0; font-size: 1.08rem; letter-spacing: -.015em; }
+    .controls-head p { margin: 5px 0 0; color: var(--muted); font-size: .9rem; }
+    .status { background: #edf7f5; color: var(--teal-dark); border: 1px solid #ccebe7; padding: 8px 12px; border-radius: 999px; font-size: .78rem; white-space: nowrap; }
+    .control-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px 22px; }
+    .control label { display: flex; justify-content: space-between; gap: 12px; color: var(--muted); font-size: .79rem; font-weight: 700; margin-bottom: 9px; }
+    output { color: var(--ink); font-variant-numeric: tabular-nums; }
+    input[type=range] { appearance: none; width: 100%; height: 5px; background: #dbe8ee; border-radius: 99px; outline: none; }
+    input[type=range]::-webkit-slider-thumb { appearance: none; width: 19px; height: 19px; border-radius: 50%; background: var(--teal); border: 3px solid #fff; box-shadow: 0 1px 4px rgba(16,43,70,.3); cursor: pointer; }
+    input[type=range]::-moz-range-thumb { width: 15px; height: 15px; border-radius: 50%; background: var(--teal); border: 3px solid #fff; box-shadow: 0 1px 4px rgba(16,43,70,.3); cursor: pointer; }
+    .actions { display: flex; align-items: center; gap: 12px; margin-top: 23px; }
+    button { border: 0; border-radius: 11px; padding: 11px 17px; font-weight: 800; font-size: .87rem; cursor: pointer; transition: transform .15s ease, box-shadow .15s ease; }
+    button:hover { transform: translateY(-1px); }
+    .primary { color: white; background: var(--teal-dark); box-shadow: 0 8px 18px rgba(8,125,131,.22); }
+    .secondary { color: var(--ink); background: #eaf1f5; }
+    .hint { color: var(--muted); font-size: .78rem; margin-left: auto; }
+    .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin: 18px 0; }
+    .stat { padding: 18px 19px; }
+    .stat .label { color: var(--muted); font-size: .75rem; font-weight: 750; }
+    .stat .value { margin-top: 7px; color: var(--ink); font-size: 1.35rem; font-weight: 850; font-variant-numeric: tabular-nums; }
+    .stat .sub { margin-top: 4px; color: var(--muted); font-size: .73rem; }
+    .accent-teal { border-top: 4px solid var(--teal); }
+    .accent-orange { border-top: 4px solid var(--orange); }
+    .accent-purple { border-top: 4px solid var(--purple); }
+    .accent-slate { border-top: 4px solid var(--slate); }
+    .dashboard { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+    .chart-card { padding: 18px 18px 12px; min-width: 0; }
+    .chart-card h2 { margin-bottom: 2px; }
+    .chart-card .caption { color: var(--muted); font-size: .77rem; min-height: 20px; }
+    canvas { display: block; width: 100%; height: 285px; margin-top: 4px; }
+    .theory { padding: 23px 25px; }
+    .theory h2 { margin-bottom: 16px; }
+    .theory-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 24px; }
+    .equation { background: #eef7f7; border: 1px solid #cde7e5; border-radius: 14px; padding: 17px; color: #164e58; font-family: Georgia, serif; font-size: 1.05rem; line-height: 1.9; }
+    .theory ul { margin: 0; padding-left: 20px; color: var(--muted); line-height: 1.7; font-size: .9rem; }
+    .theory strong { color: var(--ink); }
+    .footer-note { text-align: center; color: var(--muted); font-size: .78rem; padding-top: 28px; }
+    @media (max-width: 850px) {
+      .control-grid, .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .dashboard { grid-template-columns: 1fr; }
+      .theory-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 560px) {
+      .hero { padding: 38px 17px 26px; }
+      .shell { padding: 0 17px 48px; }
+      .controls-head { display: block; }
+      .status { display: inline-block; margin-top: 14px; }
+      .control-grid, .stats { grid-template-columns: 1fr; }
+      .actions { flex-wrap: wrap; }
+      .hint { width: 100%; margin-left: 0; }
+      canvas { height: 250px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="eyebrow">NUMERICAL LAB · MATHS PROJECT</div>
+    <h1>Drift-aware eigen scaling</h1>
+    <p>Watch a gradient method adapt to a changing curvature spectrum. Tune the experiment, then compare a normal fixed-step descent with a spectral tracker that estimates the largest eigenvalue online.</p>
+  </header>
+
+  <main class="shell">
+    <section class="card controls" aria-label="Simulation controls">
+      <div class="controls-head">
+        <div>
+          <h2>Experiment controls</h2>
+          <p>Change a parameter and press <strong>Run simulation</strong> to regenerate every plot.</p>
+        </div>
+        <div id="status" class="status">Simulation ready</div>
+      </div>
+      <div class="control-grid">
+        <div class="control"><label for="steps">Iterations <output id="stepsOut"></output></label><input id="steps" type="range" min="80" max="500" step="10" value="260"></div>
+        <div class="control"><label for="curvature">Curvature drift <output id="curvatureOut"></output></label><input id="curvature" type="range" min="0.25" max="1.8" step="0.05" value="1"></div>
+        <div class="control"><label for="motion">Target motion <output id="motionOut"></output></label><input id="motion" type="range" min="0" max="1.8" step="0.05" value="1"></div>
+        <div class="control"><label for="plainEta">Normal GD step <output id="plainEtaOut"></output></label><input id="plainEta" type="range" min="0.005" max="0.09" step="0.001" value="0.035"></div>
+        <div class="control"><label for="gain">Eigen gain γ <output id="gainOut"></output></label><input id="gain" type="range" min="0.5" max="1.95" step="0.01" value="1.78"></div>
+        <div class="control"><label for="safety">Safety margin <output id="safetyOut"></output></label><input id="safety" type="range" min="0" max="0.35" step="0.01" value="0.10"></div>
+        <div class="control"><label for="power">Power iterations <output id="powerOut"></output></label><input id="power" type="range" min="1" max="12" step="1" value="7"></div>
+      </div>
+      <div class="actions">
+        <button class="primary" id="run">Run simulation</button>
+        <button class="secondary" id="reset">Reset defaults</button>
+        <span class="hint">No server or external library required — this page runs in your browser.</span>
+      </div>
+    </section>
+
+    <section class="stats" aria-label="Simulation summary">
+      <article class="card stat accent-slate"><div class="label">NORMAL GD · FINAL GAP</div><div id="normalGap" class="value">—</div><div class="sub">fixed unscaled step</div></article>
+      <article class="card stat accent-teal"><div class="label">DRIFT-AWARE · FINAL GAP</div><div id="driftGap" class="value">—</div><div class="sub">adaptive eigen scaling</div></article>
+      <article class="card stat accent-orange"><div class="label">FROZEN SCALE</div><div id="frozenStatus" class="value">—</div><div class="sub">initial eigenvalue used forever</div></article>
+      <article class="card stat accent-purple"><div class="label">PEAK CURVATURE</div><div id="peakLambda" class="value">—</div><div class="sub">true λ<sub>max</sub> over the run</div></article>
+    </section>
+
+    <section class="dashboard" aria-label="Simulation plots">
+      <article class="card chart-card"><h2>Parameter trajectories</h2><div class="caption">Contours show the initial objective; the target moves after t = 0.</div><canvas id="trajectory" role="img" aria-label="Parameter trajectories on objective contours"></canvas></article>
+      <article class="card chart-card"><h2>Objective gap</h2><div class="caption">Lower is better. A log scale makes slow and fast convergence visible together.</div><canvas id="loss" role="img" aria-label="Objective gap over iterations"></canvas></article>
+      <article class="card chart-card"><h2>Curvature spectrum</h2><div class="caption">The drift-aware estimate follows the largest eigenvalue as it changes.</div><canvas id="spectrum" role="img" aria-label="True and estimated eigenvalues over iterations"></canvas></article>
+      <article class="card chart-card"><h2>Step size versus safety limit</h2><div class="caption">For a fixed SPD quadratic, stability requires 0 &lt; η &lt; 2 / λ<sub>max</sub>.</div><canvas id="step" role="img" aria-label="Step sizes and stability limit over iterations"></canvas></article>
+      <article class="card chart-card"><h2>Tracking error</h2><div class="caption">Distance from the current iterate to the moving minimizer x<sub>t</sub>*.</div><canvas id="error" role="img" aria-label="Distance to moving optimum over iterations"></canvas></article>
+      <article class="card chart-card"><h2>Drift response</h2><div class="caption">Relative spectral change controls how quickly the online filter responds.</div><canvas id="drift" role="img" aria-label="Spectral drift score and tracked eigenvalue"></canvas></article>
+    </section>
+
+    <section class="card theory" style="margin-top:18px">
+      <h2>What is being tested?</h2>
+      <div class="theory-grid">
+        <div class="equation">
+          f<sub>t</sub>(x) = ½ (x − x<sub>t</sub>*)<sup>T</sup>A<sub>t</sub>(x − x<sub>t</sub>*)<br>
+          x<sub>t+1</sub> = x<sub>t</sub> − η<sub>t</sub> ∇f<sub>t</sub>(x<sub>t</sub>)<br>
+          η<sub>t</sub> = γ / ((1 + safety) λ̂<sub>max,t</sub>)
+        </div>
+        <ul>
+          <li><strong>Normal GD</strong> keeps η fixed, so it cannot react when the high-curvature eigenvalue grows.</li>
+          <li><strong>Frozen scaling</strong> uses spectral information once at the start, but becomes stale under drift.</li>
+          <li><strong>Drift-aware scaling</strong> estimates λ<sub>max</sub> with power iteration, filters noise, and reacts faster to upward curvature changes.</li>
+          <li>Move the <strong>curvature drift</strong> slider high to make stale step sizes visibly unsafe.</li>
+        </ul>
+      </div>
+    </section>
+    <div class="footer-note">Built as a self-contained educational simulation. The browser implementation mirrors the Python prototype in the repository.</div>
+  </main>
+
+  <script>
+    // The browser version intentionally uses only Canvas and vanilla JavaScript
+    // so it can be hosted directly from GitHub Pages without a build step.
+    const COLORS = { normal: '#78879a', frozen: '#ed8354', drift: '#00a6a6', purple: '#8b61b8', ink: '#102b46', grid: '#dce6ed', muted: '#607389' };
+    const defaults = { steps: 260, curvature: 1, motion: 1, plainEta: .035, gain: 1.78, safety: .10, power: 7 };
+    let latest = null;
+
+    const $ = id => document.getElementById(id);
+    const num = id => Number($(id).value);
+    const dot = (a, b) => a[0] * b[0] + a[1] * b[1];
+    const norm = a => Math.hypot(a[0], a[1]);
+    const matVec = (m, v) => [m[0][0] * v[0] + m[0][1] * v[1], m[1][0] * v[0] + m[1][1] * v[1]];
+    const sub = (a, b) => [a[0] - b[0], a[1] - b[1]];
+    const finite = v => Number.isFinite(v);
+    const lastFinite = values => { for (let i = values.length - 1; i >= 0; i--) if (finite(values[i])) return values[i]; return NaN; };
+    const sci = value => !finite(value) ? '—' : (Math.abs(value) >= 1000 || (Math.abs(value) > 0 && Math.abs(value) < .01) ? value.toExponential(2) : value.toFixed(3));
+
+    function spectrum(t, steps, factor) {
+      const phase = 2 * Math.PI * t / Math.max(steps - 1, 1);
+      return { min: .65 + .18 * Math.sin(phase + .75), max: 8 + 13 * factor * (.5 + .5 * Math.sin(phase - .85)) + 11 * factor * t / Math.max(steps - 1, 1) };
+    }
+    function rotation(t, steps) {
+      const phase = 2 * Math.PI * t / Math.max(steps - 1, 1);
+      return .18 + .70 * Math.sin(.55 * phase) + .12 * Math.sin(phase);
+    }
+    function optimum(t, steps, motion) {
+      const phase = 2 * Math.PI * t / Math.max(steps - 1, 1);
+      return [1.35 * Math.cos(.72 * phase * motion), .88 * Math.sin(.72 * phase * motion + .55)];
+    }
+    function hessian(t, config) {
+      const s = spectrum(t, config.steps, config.curvature);
+      const theta = rotation(t, config.steps);
+      const c = Math.cos(theta), si = Math.sin(theta);
+      return [[c*c*s.min + si*si*s.max, c*si*(s.min-s.max)], [c*si*(s.min-s.max), si*si*s.min + c*c*s.max]];
+    }
+    function objective(x, t, config) {
+      if (!x || !finite(x[0]) || !finite(x[1])) return NaN;
+      const d = sub(x, optimum(t, config.steps, config.motion));
+      return .5 * dot(d, matVec(hessian(t, config), d));
+    }
+
+    function runMethod(method, config, start) {
+      const n = config.steps, states = [start.slice()], gaps = [objective(start, 0, config)];
+      const distances = [norm(sub(start, optimum(0, n, config.motion)))];
+      const eta = Array(n).fill(NaN), rawLambda = Array(n).fill(NaN), trackedLambda = Array(n).fill(NaN), driftScore = Array(n).fill(NaN);
+      const initialLambda = spectrum(0, n, config.curvature).max;
+      let x = start.slice(), divergedAt = null;
+      let vector = [.83, .41], estimate = null, previousRaw = null;
+      for (let t = 0; t < n; t++) {
+        const H = hessian(t, config);
+        let step;
+        if (method === 'normal') step = config.plainEta;
+        else if (method === 'frozen') step = config.gain / initialLambda;
+        else {
+          for (let j = 0; j < config.power; j++) {
+            const candidate = matVec(H, vector), length = norm(candidate);
+            if (!length) break;
+            vector = [candidate[0] / length, candidate[1] / length];
+          }
+          const raw = dot(vector, matVec(H, vector));
+          rawLambda[t] = raw;
+          if (estimate === null) estimate = raw;
+          else {
+            const drift = Math.abs(raw - previousRaw) / Math.max(Math.abs(previousRaw), 1e-12);
+            driftScore[t] = drift;
+            const alpha = Math.min(.82, .16 + 7 * drift);
+            let filtered = (1 - alpha) * estimate + alpha * raw;
+            if (raw > estimate) filtered = Math.max(filtered, raw);
+            estimate = filtered;
+          }
+          trackedLambda[t] = estimate;
+          step = config.gain / ((1 + config.safety) * estimate);
+          previousRaw = raw;
+        }
+        eta[t] = step;
+        if (!x || !finite(x[0]) || !finite(x[1]) || norm(x) > 1e6) { divergedAt = divergedAt ?? t; break; }
+        const gradient = matVec(H, sub(x, optimum(t, n, config.motion)));
+        x = [x[0] - step * gradient[0], x[1] - step * gradient[1]];
+        states.push(x.slice());
+        const at = Math.min(t + 1, n - 1);
+        gaps.push(objective(x, at, config));
+        distances.push(norm(sub(x, optimum(at, n, config.motion))));
+        if (!finite(x[0]) || !finite(x[1]) || norm(x) > 1e6) { divergedAt = t + 1; break; }
+      }
+      if (method !== 'drift') { rawLambda.fill(initialLambda); trackedLambda.fill(initialLambda); }
+      return { method, states, gaps, distances, eta, rawLambda, trackedLambda, driftScore, divergedAt };
+    }
+
+    function simulate(config) {
+      const start = [-2.35, 2.05];
+      return {
+        normal: runMethod('normal', config, start),
+        frozen: runMethod('frozen', config, start),
+        drift: runMethod('drift', config, start)
+      };
+    }
+
+    function canvasFrame(id) {
+      const canvas = $(id), ratio = window.devicePixelRatio || 1, width = canvas.clientWidth, height = canvas.clientHeight;
+      canvas.width = Math.max(1, Math.floor(width * ratio)); canvas.height = Math.max(1, Math.floor(height * ratio));
+      const ctx = canvas.getContext('2d'); ctx.setTransform(ratio, 0, 0, ratio, 0, 0); ctx.clearRect(0, 0, width, height);
+      return { canvas, ctx, width, height };
+    }
+    function basePlot(frame, yTitle) {
+      const { ctx, width, height } = frame, left = 47, right = 14, top = 26, bottom = 31;
+      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, width, height);
+      ctx.strokeStyle = COLORS.grid; ctx.lineWidth = 1;
+      for (let i = 0; i <= 4; i++) { const y = top + (height - top - bottom) * i / 4; ctx.beginPath(); ctx.moveTo(left, y); ctx.lineTo(width-right, y); ctx.stroke(); }
+      ctx.strokeStyle = '#a9bac8'; ctx.beginPath(); ctx.moveTo(left, top); ctx.lineTo(left, height-bottom); ctx.lineTo(width-right, height-bottom); ctx.stroke();
+      ctx.fillStyle = COLORS.muted; ctx.font = '10px ui-sans-serif, system-ui'; ctx.fillText(yTitle, 7, 14); ctx.fillText('0', left-3, height-10); ctx.fillText('iterations', width-59, height-10);
+      return { left, right, top, bottom, pw: width-left-right, ph: height-top-bottom };
+    }
+    function drawLegend(ctx, series, x, y) {
+      ctx.font = '10px ui-sans-serif, system-ui'; let cursor = x;
+      for (const s of series) { const w = ctx.measureText(s.label).width + 34; ctx.strokeStyle = s.color; ctx.lineWidth = 2; ctx.setLineDash(s.dash || []); ctx.beginPath(); ctx.moveTo(cursor, y-3); ctx.lineTo(cursor+18, y-3); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = COLORS.muted; ctx.fillText(s.label, cursor+23, y); cursor += w; if (cursor > 240) { cursor = x; y += 15; } }
+    }
+    function chart(id, series, options = {}) {
+      const frame = canvasFrame(id), { ctx, width, height } = frame, box = basePlot(frame, options.yTitle || 'value');
+      const all = series.flatMap(s => s.values.filter(v => finite(v) && (!options.log || v > 0)));
+      if (!all.length) return;
+      let lo = options.log ? Math.log10(Math.min(...all)) : Math.min(...all), hi = options.log ? Math.log10(Math.max(...all)) : Math.max(...all);
+      if (lo === hi) { lo -= 1; hi += 1; } else { const pad = (hi-lo)*.08; lo -= pad; hi += pad; }
+      const maxLength = Math.max(...series.map(s => s.values.length));
+      const sx = i => box.left + box.pw * i / Math.max(maxLength - 1, 1);
+      const sy = v => { const z = options.log ? Math.log10(v) : v; return box.top + box.ph * (1 - (z-lo)/(hi-lo)); };
+      ctx.fillStyle = COLORS.muted; ctx.font = '9px ui-sans-serif, system-ui';
+      for (let i = 0; i <= 4; i++) { const value = hi - (hi-lo)*i/4; ctx.fillText(options.log ? Math.pow(10, value).toExponential(0) : value.toPrecision(3), 2, box.top + box.ph*i/4 + 3); }
+      for (const s of series) {
+        ctx.strokeStyle = s.color; ctx.lineWidth = s.width || 2; ctx.setLineDash(s.dash || []); ctx.beginPath(); let open = false;
+        s.values.forEach((value, i) => { if (!finite(value) || (options.log && value <= 0)) { open = false; return; } const px=sx(i), py=sy(value); if (!open) ctx.moveTo(px,py); else ctx.lineTo(px,py); open=true; }); ctx.stroke(); ctx.setLineDash([]);
+      }
+      drawLegend(ctx, series, box.left, 15);
+    }
+    function drawTrajectory(config, results) {
+      const frame = canvasFrame('trajectory'), { ctx, width, height } = frame, box = basePlot(frame, 'x₂'), range = 3.5;
+      const mx = x => box.left + box.pw * (x + range) / (2*range), my = y => box.top + box.ph * (1 - (y + range)/(2*range));
+      const initial = spectrum(0, config.steps, config.curvature), theta = rotation(0, config.steps), center = optimum(0, config.steps, config.motion), scale = Math.min(box.pw, box.ph)/(2*range);
+      ctx.save(); ctx.translate(mx(center[0]), my(center[1])); ctx.scale(scale, -scale); ctx.rotate(theta); ctx.strokeStyle='#9ec2d0'; ctx.lineWidth=1/scale;
+      for (let i=1; i<=9; i++) { const level = initial.max * .07 * Math.pow(2.5, i/2); ctx.globalAlpha=.55; ctx.beginPath(); ctx.ellipse(0,0,Math.sqrt(2*level/initial.min),Math.sqrt(2*level/initial.max),0,0,2*Math.PI); ctx.stroke(); } ctx.restore();
+      ctx.strokeStyle = '#c4ccd4'; ctx.setLineDash([4,4]); ctx.beginPath();
+      for (let t=0;t<config.steps;t++) { const target=optimum(t,config.steps,config.motion); if(!t)ctx.moveTo(mx(target[0]),my(target[1])); else ctx.lineTo(mx(target[0]),my(target[1])); } ctx.stroke(); ctx.setLineDash([]);
+      const series = [{key:'normal', label:'normal GD', color:COLORS.normal, dash:[6,4]}, {key:'frozen', label:'frozen scale', color:COLORS.frozen, dash:[2,3]}, {key:'drift', label:'drift-aware', color:COLORS.drift, dash:[]}];
+      for (const s of series) { const states=results[s.key].states; ctx.strokeStyle=s.color; ctx.lineWidth=2.2; ctx.setLineDash(s.dash); ctx.beginPath(); let open=false; states.forEach(p=>{if(!p||!finite(p[0])){open=false;return;} if(!open)ctx.moveTo(mx(p[0]),my(p[1]));else ctx.lineTo(mx(p[0]),my(p[1]));open=true;});ctx.stroke();ctx.setLineDash([]); const last=states.filter(p=>p&&finite(p[0])).at(-1); if(last){ctx.fillStyle=s.color;ctx.beginPath();ctx.arc(mx(last[0]),my(last[1]),4,0,2*Math.PI);ctx.fill();} }
+      ctx.fillStyle=COLORS.ink; ctx.beginPath(); ctx.arc(mx(center[0]),my(center[1]),5,0,2*Math.PI);ctx.fill(); ctx.fillStyle=COLORS.muted; ctx.font='9px ui-sans-serif, system-ui';ctx.fillText('initial optimum',mx(center[0])+7,my(center[1])-7); drawLegend(ctx, series.map(s=>({label:s.label,color:s.color,dash:s.dash})),box.left,15);
+    }
+    function render() {
+      if (!latest) return;
+      const { config, results } = latest, steps=config.steps, trueMin=[], trueMax=[];
+      for(let t=0;t<steps;t++){const s=spectrum(t,steps,config.curvature);trueMin.push(s.min);trueMax.push(s.max);}
+      drawTrajectory(config, results);
+      chart('loss', [{label:'normal GD',values:results.normal.gaps,color:COLORS.normal,dash:[6,4]},{label:'frozen scale',values:results.frozen.gaps,color:COLORS.frozen,dash:[2,3]},{label:'drift-aware',values:results.drift.gaps,color:COLORS.drift}], {log:true,yTitle:'objective gap'});
+      chart('spectrum', [{label:'true λmax',values:trueMax,color:COLORS.ink},{label:'true λmin',values:trueMin,color:'#6793ad'},{label:'raw estimate',values:results.drift.rawLambda,color:COLORS.teal,dash:[2,3],width:1},{label:'tracked λmax',values:results.drift.trackedLambda,color:COLORS.teal}], {yTitle:'eigenvalue'});
+      chart('step', [{label:'safe 2/λmax',values:trueMax.map(v=>2/v),color:COLORS.ink},{label:'normal GD',values:results.normal.eta,color:COLORS.normal,dash:[6,4]},{label:'frozen scale',values:results.frozen.eta,color:COLORS.frozen,dash:[2,3]},{label:'drift-aware',values:results.drift.eta,color:COLORS.teal}], {yTitle:'step η'});
+      chart('error', [{label:'normal GD',values:results.normal.distances,color:COLORS.normal,dash:[6,4]},{label:'frozen scale',values:results.frozen.distances,color:COLORS.frozen,dash:[2,3]},{label:'drift-aware',values:results.drift.distances,color:COLORS.teal}], {log:true,yTitle:'distance'});
+      chart('drift', [{label:'tracked λmax',values:results.drift.trackedLambda,color:COLORS.teal},{label:'drift score',values:results.drift.driftScore,color:COLORS.purple,dash:[5,3]}], {yTitle:'value'});
+      const normalGap=lastFinite(results.normal.gaps), driftGap=lastFinite(results.drift.gaps), frozen=results.frozen.divergedAt===null?'stable':`diverged at t=${results.frozen.divergedAt}`;
+      $('normalGap').textContent=sci(normalGap); $('driftGap').textContent=sci(driftGap); $('frozenStatus').textContent=frozen; $('peakLambda').textContent=Math.max(...trueMax).toFixed(2);
+    }
+    function readConfig() { return {steps:num('steps'),curvature:num('curvature'),motion:num('motion'),plainEta:num('plainEta'),gain:num('gain'),safety:num('safety'),power:num('power')}; }
+    function updateOutputs() { $('stepsOut').textContent=num('steps'); $('curvatureOut').textContent=num('curvature').toFixed(2)+'×'; $('motionOut').textContent=num('motion').toFixed(2)+'×'; $('plainEtaOut').textContent=num('plainEta').toFixed(3); $('gainOut').textContent=num('gain').toFixed(2); $('safetyOut').textContent=(num('safety')*100).toFixed(0)+'%'; $('powerOut').textContent=num('power'); }
+    function run() { updateOutputs(); $('status').textContent='Running simulation…'; window.setTimeout(()=>{ latest={config:readConfig(),results:simulate(readConfig())}; render(); $('status').textContent='Simulation complete'; }, 15); }
+    $('run').addEventListener('click',run); $('reset').addEventListener('click',()=>{for(const [id,value] of Object.entries(defaults))$(id).value=value;run();});
+    for(const input of document.querySelectorAll('input[type=range]')) input.addEventListener('input',updateOutputs);
+    window.addEventListener('resize',()=>window.requestAnimationFrame(render));
+    updateOutputs(); run();
+  </script>
+</body>
+</html>

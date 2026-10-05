@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+*.png
+.DS_Store
+
+# OmniRush/Termux home metadata; never publish these files.
+.omnirush/
+__agent__/
+.npm/
+.matplotlib/
+.ssh/
+.cache/
