@@ -1,0 +1,12 @@
+{
+  "name": "drift-aware-eigen-scaling-lab",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/simulation.test.cjs",
+    "test:browser": "playwright test",
+    "serve": "python3 -m http.server 8000 --bind 127.0.0.1 --directory docs"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1"
+  }
+}

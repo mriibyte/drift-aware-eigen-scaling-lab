@@ -2,6 +2,9 @@ __pycache__/
 *.py[cod]
 *.png
 .DS_Store
+node_modules/
+playwright-report/
+test-results/
 
 # OmniRush/Termux home metadata; never publish these files.
 .omnirush/
