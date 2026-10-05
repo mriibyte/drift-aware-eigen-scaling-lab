@@ -10,4 +10,5 @@ __agent__/
 .matplotlib/
 .ssh/
 .config/
+.gitconfig
 .cache/
