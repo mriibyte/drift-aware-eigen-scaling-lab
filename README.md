@@ -109,7 +109,7 @@ npx playwright install chromium
 npm run test:browser
 ```
 
-The browser tests exercise live slider updates, WebGL chart rendering, camera persistence, mobile layout, and the explicit Plotly-load failure state.
+The browser tests exercise live slider updates, WebGL chart rendering, camera persistence, mobile layout, and the explicit Plotly-load failure state. The default CI workflow runs the deterministic JavaScript and Python checks; the browser workflow is available as a manual GitHub Actions dispatch because WebGL/browser availability varies across hosted runners.
 
 ## Reproducibility and scope
 
