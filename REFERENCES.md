@@ -13,7 +13,7 @@ The following references are the bibliography used by the accompanying paper. Th
 
 ## Third-party assets
 
-- The browser visualizer loads Plotly.js `2.35.2` from `https://cdn.plot.ly/plotly-2.35.2.min.js`.
+- The browser visualizer vendors Plotly.js `2.35.2` in `docs/plotly-2.35.2.min.js`; it was obtained from the official Plotly CDN URL `https://cdn.plot.ly/plotly-2.35.2.min.js` so the deployed lab is not dependent on the CDN at runtime.
 - JavaScript development tests use `@playwright/test`.
 - Python experiments use NumPy, Matplotlib, pandas, and scikit-learn.
 

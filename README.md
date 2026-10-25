@@ -71,7 +71,7 @@ python drift_aware_eigen_scaling.py --show
 
 ### Browser visualizer
 
-No frontend build is required. Plotly.js is loaded from the pinned public CDN version in `docs/index.html`.
+No frontend build is required. Plotly.js `2.35.2` is vendored in `docs/plotly-2.35.2.min.js`, so the lab and its browser checks do not depend on a third-party CDN being reachable at runtime.
 
 ```bash
 python -m http.server 8000 --bind 127.0.0.1 --directory docs

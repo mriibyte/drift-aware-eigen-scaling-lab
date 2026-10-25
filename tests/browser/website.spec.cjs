@@ -114,7 +114,7 @@ test('aligned 3D charts, readable mathematics, live updates, camera persistence,
 });
 
 test('failure to load Plotly shows an explicit error rather than claiming success', async ({ page }) => {
-  await page.route('https://cdn.plot.ly/**', route => route.abort());
+  await page.route('**/plotly-2.35.2.min.js', route => route.abort());
   await page.goto('/');
   await expect(page.locator('#plotError')).toBeVisible();
   await expect(page.locator('#plotError')).toContainText('Plotly.js failed to load');
