@@ -1,6 +1,9 @@
 import numpy as np
 import pandas as pd
+from pathlib import Path
 from sklearn.datasets import make_classification
+
+DATA_DIR = Path(__file__).resolve().parent
 
 def generate_covariate_shift_dataset(n_samples=10000, n_features=20, filename="synthetic_covariate_shift.csv"):
     """
@@ -43,8 +46,11 @@ def generate_covariate_shift_dataset(n_samples=10000, n_features=20, filename="s
     df = pd.DataFrame(X, columns=columns)
     df["TARGET"] = y
     
-    df.to_csv(filename, index=False)
-    print(f"Dataset generated: {filename} with shape {df.shape}")
+    output = Path(filename)
+    if not output.is_absolute():
+        output = DATA_DIR / output
+    df.to_csv(output, index=False)
+    print(f"Dataset generated: {output} with shape {df.shape}")
 
 if __name__ == "__main__":
     generate_covariate_shift_dataset()

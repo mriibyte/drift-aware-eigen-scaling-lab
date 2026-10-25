@@ -2,10 +2,13 @@ import numpy as np
 import pandas as pd
 import time
 import matplotlib.pyplot as plt
+from pathlib import Path
 from sklearn.preprocessing import StandardScaler
 
+DATA_DIR = Path(__file__).resolve().parent
+
 # 1. Load Data (Keeping sequential order intact for drift)
-df = pd.read_csv("synthetic_covariate_shift.csv")
+df = pd.read_csv(DATA_DIR / "synthetic_covariate_shift.csv")
 y = df.pop("TARGET").values
 X = df.values.astype(float)
 
@@ -43,6 +46,7 @@ def update_adam(w, g, t, st, lr=0.01, b1=.9, b2=.999):
 
 def update_eigen(w, g, X_b, y_b, st, gamma=1.0, safety=0.1, k=5):
     v = st["v"]
+    lam_hat = 1e-8
     for _ in range(k):
         u = hvp(w, v, X_b, y_b)
         lam_hat = np.linalg.norm(u) + 1e-8

@@ -93,7 +93,7 @@ test('aligned 3D charts, readable mathematics, live updates, camera persistence,
   await page.locator('#trajectoryView').selectOption('time');
   await expect.poll(() => revision(page)).toBeGreaterThan(previous);
   await ready(page);
-  expect(await page.locator('#trajectory').evaluate(element => element.data.some(trace => trace.type === 'surface')))).toBeFalsy();
+  expect(await page.locator('#trajectory').evaluate(element => element.data.some(trace => trace.type === 'surface'))).toBeFalsy();
   expect(await page.locator('#trajectory').evaluate(element => element._fullLayout.scene.zaxis.title.text)).toBe('Iteration t');
 
   previous = await revision(page);

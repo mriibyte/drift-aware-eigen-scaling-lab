@@ -21,10 +21,14 @@ test('default numerical run retains the original comparison', () => {
   assert.equal(results.normal.divergedAt, null);
   assert.equal(results.drift.divergedAt, null);
   assert.equal(results.frozen.divergedAt, 42);
-  close(results.normal.gaps.at(-1), 0.06310092056731548);
-  close(results.drift.gaps.at(-1), 0.03551662146367989);
+  close(results.normal.gaps.at(-1), 0.06319405600107264);
+  close(results.drift.gaps.at(-1), 0.035516628350514536);
   assert.equal(results.drift.states.length, Sim.DEFAULTS.steps + 1);
   assert.equal(results.drift.driftScore[0], 0);
+});
+
+test('browser defaults use the source-matched seed-4 starting point', () => {
+  assert.deepEqual(Sim.SOURCE_MATCHED_START, [-2.467322407470104, 2.01855088738136]);
 });
 
 test('slider changes affect numerical results and unsafe normal GD is reported', () => {

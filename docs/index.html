@@ -3,8 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Live, interactive 3D comparison of drift-aware eigen scaling and normal gradient descent.">
-  <title>Drift-aware eigen scaling lab</title>
+  <meta name="description" content="Live, interactive 3D comparison of drift-aware eigen scaling and normal gradient descent under changing curvature.">
+  <meta name="theme-color" content="#087d83">
+  <title>Drift-Aware Eigenvalue Scaling Lab</title>
   <style>
     :root { --ink:#102b46; --muted:#52677c; --teal:#008f94; --paper:#f5f8fb; --line:#d8e3ec; --shadow:0 18px 45px rgba(26,57,83,.08); }
     * { box-sizing:border-box; }
@@ -100,13 +101,13 @@
 <body>
   <header class="hero">
     <div class="eyebrow">NUMERICAL LAB · LIVE 3D SIMULATION</div>
-    <h1>Drift-aware eigen scaling</h1>
+    <h1>Drift-aware eigenvalue scaling</h1>
     <p>Rotate, zoom, and inspect a changing optimization problem. Drag a slider to update the simulation live, comparing ordinary fixed-step gradient descent with an online curvature-aware step.</p>
   </header>
   <main class="shell">
     <section class="card controls" aria-label="Simulation controls">
       <div class="controls-head">
-        <div><h2>Live experiment controls</h2><p>Plots update automatically as you adjust values. Your camera angle stays in place.</p></div>
+        <div><h2>Live experiment controls</h2><p>Plots update automatically as you adjust values. Your camera angle stays in place. Defaults match the paper's source-seed comparison.</p></div>
         <div id="status" class="status" role="status" aria-live="polite">Loading interactive plots…</div>
       </div>
       <div class="control-grid">
@@ -174,7 +175,7 @@
         </div>
       </div>
     </section>
-    <footer class="footer-note">Simulation runs locally in your browser · 3D rendering uses Plotly.js / WebGL<br><a href="https://github.com/mriibyte/drift-aware-eigen-scaling-lab">Python prototype and source on GitHub</a></footer>
+    <footer class="footer-note">Simulation runs locally in your browser · 3D rendering uses Plotly.js / WebGL<br><a href="https://github.com/mriibyte/drift-aware-eigen-scaling-lab">Python prototype and source on GitHub</a> · <a href="https://lung-health-research-app.vercel.app/">Lung-health research prototype</a></footer>
   </main>
 </body>
 </html>

@@ -1,77 +1,136 @@
-# Drift-aware eigen scaling lab
+# Drift-Aware Eigenvalue Scaling Lab
 
-An educational simulation for a maths project: gradient descent on a strongly convex quadratic whose Hessian changes over time.
+An educational, reproducible simulation study of gradient descent when the objective's curvature changes over time.
 
-**Live interactive website:** <https://mriibyte.github.io/drift-aware-eigen-scaling-lab/>
+**Project links**
 
-The project has two interfaces:
+- **Interactive maths lab:** <https://mriibyte.github.io/drift-aware-eigen-scaling-lab/>
+- **Research paper:** [`paper/drift-aware-eigen-scaling-final-paper.pdf`](paper/drift-aware-eigen-scaling-final-paper.pdf)
+- **Lung-health research prototype:** <https://lung-health-research-app.vercel.app/>
 
-- `drift_aware_eigen_scaling.py` — a Python/Matplotlib dashboard with static plots.
-- `docs/index.html` — an interactive Plotly.js website. It runs the simulation in the browser, renders rotatable/zoomable 3D charts, and lets visitors tune the curvature drift, target motion, number of iterations, normal GD step, eigen gain, safety margin, and power iterations. Slider changes update the simulation automatically.
+> The lung-health prototype is a separate experimental application. It is not a medical device, does not diagnose disease, and must not be used as a substitute for professional medical care.
+
+## What this repository contains
+
+| Area | Contents |
+| --- | --- |
+| `drift_aware_eigen_scaling.py` | Python/Matplotlib reference implementation of the source-matched 2-D experiment |
+| `docs/` | Dependency-light browser visualizer served by GitHub Pages |
+| `model/` | Historical streaming-classification scripts and synthetic CSV inputs |
+| `paper/` | The project paper and its reproducibility notes |
+| `tests/` | JavaScript numerical tests, Python regression tests, and Playwright browser checks |
+
+The browser visualizer and Python prototype intentionally share the same default problem schedule, optimizer constants, and source-matched seed-4 starting point. The default Python run reproduces the paper's headline values:
+
+| Method | Final gap | Status |
+| --- | ---: | --- |
+| Plain GD | `0.0631940560` | stable for 260 updates |
+| Frozen eigen scaling | `3.05895e+13` | implementation threshold crossed at update 42 |
+| Drift-aware eigen scaling | `0.0355166284` | stable for 260 updates |
+
+These are controlled synthetic results, not a claim of universal optimizer superiority.
 
 ## Mathematical idea
 
-The simulated objective is
+The simulation uses the moving strongly-convex quadratic
 
 ```text
 f_t(x) = 1/2 (x - x*_t)^T A_t (x - x*_t)
 ```
 
-where `A_t` is symmetric positive definite but its eigenvalues and eigenvectors drift. Gradient descent is
+where `A_t` is symmetric positive definite, its spectrum and eigenbasis drift, and the minimizer `x*_t` moves. Gradient descent updates are
 
 ```text
 x_(t+1) = x_t - eta_t grad f_t(x_t)
 ```
 
-For a fixed SPD quadratic, the step is stable when `0 < eta < 2 / lambda_max(A)`. The drift-aware method estimates `lambda_max(A_t)` with power iteration and uses
+For one fixed SPD quadratic, the classical fixed-objective stability condition is `0 < eta < 2 / lambda_max(A)`. The practical method estimates the largest eigenvalue with a short power iteration, filters it with a drift-responsive tracker, and uses
 
 ```text
 eta_t = gamma / ((1 + safety) * lambda_hat_max,t)
 ```
 
-The online estimate reacts faster when curvature increases. The visualizer compares it with normal fixed-step GD and a frozen eigen-scaled step that becomes stale under drift. This is an educational heuristic: power iteration may underestimate the largest eigenvalue, the target is moving, and neither method is guaranteed to outperform the other for all settings.
+The tracker is a scalar step-size heuristic. It is not a matrix preconditioner and it does not provide a non-stationary convergence theorem. Finite power iteration, eigendirection rotation, estimator lag, and target motion can still produce unsafe or suboptimal steps.
 
-## Interactive 3D views
+## Run locally
 
-- Drag to rotate, scroll/pinch to zoom, hover for numerical values, and click a legend entry to hide a series.
-- Sliders update automatically during adjustment. Rendering is throttled and serialized, so the latest values win without overlapping updates. Camera angles persist across parameter changes.
-- The parameter plot offers an **initial loss landscape** and an **iteration/time** view. Surface and paths use the same coordinates and `f_0`; the landscape is a fixed reference, not a claim that all iterates belong to one unchanging objective.
-- Parameter axes have equal scale. Off-screen divergent path segments are clipped rather than rescaled; their numerical gaps remain in the comparison charts.
-- Other 3D charts use categorical series lanes. Objective gap and tracking error heights are `log10` values with a `1e-14` display floor; hover reveals the original number.
-- The step-size ceiling is a common `2 / lambda_max` surface across all method lanes. The drift response chart explicitly normalizes each signal by its own peak.
-- Equations use native MathML with separate labeled cards and accessible text. Plotly needs WebGL and a network connection to its pinned CDN; a visible message reports loading/rendering failures.
-
-## Run the Python visualisation
+### Python reference report
 
 ```bash
-# Termux package names, if needed:
-pkg install python-numpy matplotlib
-
-python3 drift_aware_eigen_scaling.py
-# writes drift_aware_eigen_scaling.png
-
-python3 drift_aware_eigen_scaling.py --show
+python -m venv .venv
+python -m pip install -r requirements.txt
+python drift_aware_eigen_scaling.py
 ```
 
-## Run the website locally
-
-No frontend build is required. Plotly.js is loaded from its versioned public CDN:
+The command writes `drift_aware_eigen_scaling.png` (ignored by Git). Useful options:
 
 ```bash
-python3 -m http.server 8000 --directory docs
+python drift_aware_eigen_scaling.py --steps 350 --seed 7 --save report.png
+python drift_aware_eigen_scaling.py --show
 ```
 
-Then open <http://localhost:8000>.
+### Browser visualizer
 
-The website is served from GitHub Pages using the repository's `/docs` folder.
+No frontend build is required. Plotly.js is loaded from the pinned public CDN version in `docs/index.html`.
+
+```bash
+python -m http.server 8000 --bind 127.0.0.1 --directory docs
+```
+
+Open <http://127.0.0.1:8000>. The visualizer runs the numerical core in the browser and provides interactive 3-D trajectories, objective-gap comparisons, spectrum tracking, step-size safety, and tracking-error views.
+
+### Historical classification scripts
+
+The scripts in `model/` are a separate, prequential logistic-classification experiment. They preserve the repository's HVP-norm rule and synthetic streams; they are not the same algorithm as the quadratic EMA tracker. Start with:
+
+```bash
+python model/generate_data.py
+python model/new_data.py
+python model/main_optimizer.py
+python model/live_extreme.py
+```
+
+The classification inputs are synthetic and intentionally ordered to expose distribution drift. Do not interpret their metrics as clinical evidence or as validation of the quadratic tracker.
 
 ## Checks
 
+Install JavaScript dependencies and run the narrow checks first:
+
 ```bash
 npm ci
-npm test                        # numerical regression and coordinate tests
-npx playwright install chromium # on a supported desktop/CI operating system
-npm run test:browser             # 3D rendering, live inputs, camera and mobile checks
+npm test
+npm run test:python
 ```
 
-GitHub Actions runs both check suites in Chromium (software WebGL), including desktop/mobile screenshots. Termux can run the Node tests; the browser suite requires a supported Chromium environment. No frontend build step is required.
+For the full browser suite:
+
+```bash
+npx playwright install chromium
+npm run test:browser
+```
+
+The browser tests exercise live slider updates, WebGL chart rendering, camera persistence, mobile layout, and the explicit Plotly-load failure state.
+
+## Reproducibility and scope
+
+- The paper is included as a frozen artifact in [`paper/`](paper/).
+- The paper's expanded multi-regime harness and run-level CSV outputs are not currently committed to this compact public repository; the checked-in Python and browser implementations cover the source-matched interactive lab and the historical classification scripts.
+- Synthetic CSV files in `model/` are retained as project inputs. They contain no clinical patient data.
+- The implementation uses a numerical divergence threshold of `||x|| > 10^6`; this is an instrumentation rule, not a mathematical definition of divergence.
+- The 30-seed intervals and classification results described in the paper should be read with the limitations in the paper's Section 8.
+
+## Research references
+
+The paper contains the project bibliography. A plain-text copy with links and scope notes is available in [`REFERENCES.md`](REFERENCES.md). The most important background references are Polyak's fixed-objective gradient-method analysis, Barzilai–Borwein scalar step sizes, AdaGrad, Adam, randomized numerical linear algebra, and online optimization in dynamic environments.
+
+## License
+
+Source code in this repository is released under the MIT License; see [`LICENSE`](LICENSE). The included paper is an authored research artifact and is separately identified in [`paper/README.md`](paper/README.md). Third-party libraries and the Plotly.js CDN remain under their own licenses.
+
+## Citation
+
+If you use this repository or the paper, cite it using [`CITATION.cff`](CITATION.cff).
+
+## Contributing
+
+Bug reports and reproducibility improvements are welcome. See [`CONTRIBUTING.md`](CONTRIBUTING.md). Please avoid presenting the synthetic demonstrations as clinical or universal optimization evidence.

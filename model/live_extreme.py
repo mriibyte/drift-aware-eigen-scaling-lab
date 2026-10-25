@@ -2,11 +2,14 @@ import numpy as np
 import pandas as pd
 import time
 import matplotlib.pyplot as plt
+from pathlib import Path
 from sklearn.preprocessing import StandardScaler
+
+DATA_DIR = Path(__file__).resolve().parent
 
 # 1. Load Extreme Data
 try:
-    df = pd.read_csv("extreme_shift.csv")
+    df = pd.read_csv(DATA_DIR / "extreme_shift.csv")
 except FileNotFoundError:
     print("Please run the generate_extreme_shift() script first!")
     exit()
@@ -48,6 +51,7 @@ def update_adam(w, g, t, st, lr=0.005, b1=.9, b2=.999):
 
 def update_eigen(w, g, X_b, y_b, st, gamma=1.0, safety=0.1, k=5):
     v = st["v"]
+    lam_hat = 1e-8
     for _ in range(k):
         u = hvp(w, v, X_b, y_b)
         lam_hat = np.linalg.norm(u) + 1e-8

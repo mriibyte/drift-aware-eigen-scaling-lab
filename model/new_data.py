@@ -1,6 +1,9 @@
 import numpy as np
 import pandas as pd
+from pathlib import Path
 from sklearn.datasets import make_classification
+
+DATA_DIR = Path(__file__).resolve().parent
 
 def generate_extreme_shift(n_samples=10000, n_features=20):
     chunks = 4
@@ -29,8 +32,9 @@ def generate_extreme_shift(n_samples=10000, n_features=20):
     
     df = pd.DataFrame(X, columns=[f"F_{i}" for i in range(n_features)])
     df["TARGET"] = y
-    df.to_csv("extreme_shift.csv", index=False)
-    print("Extreme drift dataset created: extreme_shift.csv")
+    output = DATA_DIR / "extreme_shift.csv"
+    df.to_csv(output, index=False)
+    print(f"Extreme drift dataset created: {output}")
 
 if __name__ == "__main__":
     generate_extreme_shift()

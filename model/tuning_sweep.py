@@ -1,9 +1,12 @@
 import numpy as np
 import pandas as pd
+from pathlib import Path
 from sklearn.preprocessing import StandardScaler
 
+DATA_DIR = Path(__file__).resolve().parent
+
 # 1. Load Extreme Data
-df = pd.read_csv("extreme_shift.csv")
+df = pd.read_csv(DATA_DIR / "extreme_shift.csv")
 y = df.pop("TARGET").values
 X = df.values.astype(float)
 
@@ -45,6 +48,7 @@ def update_adam(w, g, X_b, y_b, t, st, lr=0.01):
     return w - lr*(st["m"]/(1-0.9**t))/(np.sqrt(st["s"]/(1-0.999**t))+1e-8)
 def update_eigen(w, g, X_b, y_b, t, st, gamma=1.0):
     v = st["v"]
+    lam_hat = 1e-8
     for _ in range(5):
         u = hvp(w, v, X_b, y_b)
         lam_hat = np.linalg.norm(u) + 1e-8

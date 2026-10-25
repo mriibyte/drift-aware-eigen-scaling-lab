@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+title: "Drift-Aware Eigenvalue Scaling for Gradient Descent Under Changing Curvature"
+message: "If you use this repository or the accompanying paper, please cite the project."
+type: software
+authors:
+  - family-names: Kumari
+    given-names: Tripti
+  - family-names: Ojha
+    given-names: Chayan
+  - family-names: Dey
+    given-names: Mriganko
+  - family-names: Polley
+    given-names: Ankita
+repository-code: "https://github.com/mriibyte/drift-aware-eigen-scaling-lab"
+url: "https://mriibyte.github.io/drift-aware-eigen-scaling-lab/"
+date-released: 2026-10-25
+license: MIT
+version: 1.0.0
+keywords:
+  - gradient descent
+  - changing curvature
+  - eigenvalue estimation
+  - power iteration
+  - adaptive step size
+  - reproducible simulation
